@@ -11,7 +11,7 @@ HEADER = pipex.h
 INCLUDES = -I. -I$(LIBFT_DIR)
 LIBS = -Llibft -lft
 
-SRCS = main.c check_files.c
+SRCS = main.c check_files.c check_commands.c
 OBJS = $(SRCS:.c=.o)
 
 

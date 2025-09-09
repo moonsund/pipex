@@ -6,7 +6,7 @@
 /*   By: lorlov <lorlov@student.42berlin.de>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 18:38:59 by lorlov            #+#    #+#             */
-/*   Updated: 2025/08/24 12:01:40 by lorlov           ###   ########.fr       */
+/*   Updated: 2025/09/09 11:01:44 by lorlov           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,15 +21,11 @@ bool init_files(t_pipex *p, int argc, char **argv)
 {
     p->fd_in = -1;
     p->fd_out = -1;
-    p->infile = NULL;
-    p->outfile = argv[argc - 1];
-    p->append_mode = (ft_strcmp(argv[1], "here_doc") == 0);
     if (!p->append_mode)
     {
-        p->infile = argv[1];
         if (!open_infile(p))
         {
-            if (!open_devnull(& p->fd_in))
+            if (!open_devnull(&p->fd_in))
                 return (false);
         }
     }
@@ -37,7 +33,6 @@ bool init_files(t_pipex *p, int argc, char **argv)
         return (false);  
     return (true);
 }
-
 
 static bool open_infile(t_pipex *p)
 {
@@ -52,14 +47,14 @@ static bool open_infile(t_pipex *p)
     if (fstat(p->fd_in, &st) == -1)
     {
         perror("fstat");
-        safe_close(&p->fd_in);;
+        safe_close(&p->fd_in);
         return (false);
     }
     if (S_ISDIR(st.st_mode))
     {
         errno = EISDIR;
         perror(p->infile);
-        safe_close(&p->fd_in);;
+        safe_close(&p->fd_in);
         return (false);
     }
     return (true);
