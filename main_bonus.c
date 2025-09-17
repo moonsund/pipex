@@ -6,7 +6,7 @@
 /*   By: lorlov <lorlov@student.42berlin.de>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:33:32 by lorlov            #+#    #+#             */
-/*   Updated: 2025/09/09 13:54:02 by lorlov           ###   ########.fr       */
+/*   Updated: 2025/09/09 21:22:52 by lorlov           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,14 +74,14 @@ static bool set_mode_and_bounds(t_pipex *p, int argc, char **argv)
         }
         p->infile = NULL;
         p->limiter = argv[2];
-        p->cmdc = argc - 4;
-        p->cmdv = &argv[3];
+        p->cmd_count = argc - 4;
+        p->raw_cmdv = &argv[3];
     }
     else
     {
         p->infile = argv[1]; 
-        p->cmdc = argc - 3;
-        p->cmdv = &argv[2];
+        p->cmd_count = argc - 3;
+        p->raw_cmdv = &argv[2];
     }
     return (true);
 }
