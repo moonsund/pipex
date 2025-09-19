@@ -6,7 +6,7 @@
 /*   By: lorlov <lorlov@student.42berlin.de>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:33:10 by lorlov            #+#    #+#             */
-/*   Updated: 2025/09/17 09:19:25 by lorlov           ###   ########.fr       */
+/*   Updated: 2025/09/18 23:07:38 by lorlov           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,10 @@
 //     char **envp;
 // }   t_pipex;
 
-
+// pipex.c
+void child_process1(char **argv, char *const envp[], int *fd);
+void child_process2(char **argv, char *const envp[], int *fd);
+void execute(const char *cmdline, char *const envp[]);
 
 // utils.c
 char    *find_path(char *cmd, char *const envp[]);
@@ -54,6 +57,13 @@ void error127(const char *msg);
 void exec_error_exit(const char *cmd);
 void    free_split(char **array);
 
+// pipex.c
+
+
+
+
+// utils_bonus.c
+int usage(int argc, char **argv);
 
 // bool init_files(t_pipex *p, int argc, char **argv);
 

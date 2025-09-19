@@ -1,6 +1,6 @@
 #include "pipex.h"
 
-char	*find_path(char *cmd, char *const envp[])
+char	*find_path1(char *cmd, char *const envp[])
 {
     int i;
     char **paths;

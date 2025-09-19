@@ -4,7 +4,6 @@ void child_process1(char **argv, char *const envp[], int *fd);
 void child_process2(char **argv, char *const envp[], int *fd);
 void execute(const char *cmdline, char *const envp[]);
 
-
 int main(int argc, char **argv, char *const envp[])
 {
     int fd[2];
@@ -16,13 +15,13 @@ int main(int argc, char **argv, char *const envp[])
         ft_putstr_fd("Usage: ./pipex infile \"cmd1 args\" \"cmd2 args\" outfile\n", 2);
         return (1);
     }
+
     if (pipe(fd) == -1)
         error("pipe");
-    
+
     pid1 = fork();
     if (pid1 < 0)
         error("fork #1");
-
     if (pid1 == 0)
     {
         child_process1(argv, envp, fd);
@@ -32,19 +31,17 @@ int main(int argc, char **argv, char *const envp[])
     pid2 = fork();
     if (pid2 < 0)
         error("fork #2");
-
     if (pid2 == 0)
     {
         child_process2(argv, envp, fd);
         error127("child2");
     }
-        
 
     close(fd[0]);
     close(fd[1]);
-
     waitpid(pid1, NULL, 0);
     waitpid(pid2, NULL, 0);
+
     return (0);
 }
 
@@ -62,7 +59,7 @@ void child_process1(char **argv, char *const envp[], int *fd)
     close(infile_fd);
     close(fd[0]);
     close(fd[1]);
-    execute(argv[2], envp);
+    c(argv[2], envp);
 }
 
 void child_process2(char **argv, char *const envp[], int *fd)
