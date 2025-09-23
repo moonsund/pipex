@@ -1,83 +1,83 @@
 #include "pipex.h"
 
-void child_process1(char **argv, char *const envp[], int *fd);
-void child_process2(char **argv, char *const envp[], int *fd);
+static pid_t child_process1(char **argv, char *const envp[], int *fd);
+static pid_t child_process2(char **argv, char *const envp[], int *fd);
 void execute(const char *cmdline, char *const envp[]);
+static char **parse_cmd(const char *cmdline);
 
-int main(int argc, char **argv, char *const envp[])
+int pipex(char **argv, char *const envp[])
 {
     int fd[2];
     pid_t pid1;
     pid_t pid2;
-
-    if (argc != 5)
-    {
-        ft_putstr_fd("Usage: ./pipex infile \"cmd1 args\" \"cmd2 args\" outfile\n", 2);
-        return (1);
-    }
+    int st1;
+    int st2;
 
     if (pipe(fd) == -1)
         error("pipe");
-
-    pid1 = fork();
-    if (pid1 < 0)
-        error("fork #1");
-    if (pid1 == 0)
-    {
-        child_process1(argv, envp, fd);
-        error127("child1");
-    }
-
-    pid2 = fork();
-    if (pid2 < 0)
-        error("fork #2");
-    if (pid2 == 0)
-    {
-        child_process2(argv, envp, fd);
-        error127("child2");
-    }
-
+    pid1 = child_process1(argv, envp, fd);
+    pid2 = child_process2(argv, envp, fd);
     close(fd[0]);
     close(fd[1]);
-    waitpid(pid1, NULL, 0);
-    waitpid(pid2, NULL, 0);
-
-    return (0);
+    waitpid(pid1, &st1, 0);
+    waitpid(pid2, &st2, 0);
+    if (WIFEXITED(st2))    
+        return WEXITSTATUS(st2);
+    if (WIFSIGNALED(st2))
+        return 128 + WTERMSIG(st2);
+    return 1;
 }
 
-void child_process1(char **argv, char *const envp[], int *fd)
+static pid_t child_process1(char **argv, char *const envp[], int *fd)
 {
+    pid_t pid; 
     int infile_fd;
 
-    infile_fd = open(argv[1], O_RDONLY);
-    if (infile_fd < 0)
-        error("open failure");
-    if (dup2(infile_fd, STDIN_FILENO) == -1)
-        error("dup2 infile -> stdin");
-    if (dup2(fd[1], STDOUT_FILENO) == -1)
-        error("dup2 pipe[1] -> stdout");
-    close(infile_fd);
-    close(fd[0]);
-    close(fd[1]);
-    c(argv[2], envp);
+    pid = fork();
+    if (pid < 0)
+        error("fork #1");
+    if (pid == 0)
+    {
+        infile_fd = open(argv[1], O_RDONLY);
+        if (infile_fd < 0)
+            error("open failure");
+        if (dup2(infile_fd, STDIN_FILENO) == -1)
+            error("dup2 infile -> stdin");
+        if (dup2(fd[1], STDOUT_FILENO) == -1)
+            error("dup2 pipe[1] -> stdout");
+        close(infile_fd);
+        close(fd[0]);
+        close(fd[1]);
+        execute(argv[2], envp);
+        error127("child1");
+    }
+    return (pid);
 }
 
-void child_process2(char **argv, char *const envp[], int *fd)
+static pid_t child_process2(char **argv, char *const envp[], int *fd)
 {
+    pid_t pid;
     int outfile_fd;
 
-    outfile_fd = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (outfile_fd < 0)
-        error("open failure");
-    if (dup2(fd[0], STDIN_FILENO) == -1)
-        error("dup2 pipe[0] -> stdin");
-    if (dup2(outfile_fd, STDOUT_FILENO) == -1)
-        error("dup2 outfile -> stdout");
-    close(outfile_fd);
-    close(fd[1]);
-    close(fd[0]);
-
-    execute(argv[3], envp);
+    pid = fork();
+    if (pid < 0)
+        error("fork #2");
+    if (pid == 0)
+    {
+        outfile_fd = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (outfile_fd < 0)
+            error("open failure");
+        if (dup2(fd[0], STDIN_FILENO) == -1)
+            error("dup2 pipe[0] -> stdin");
+        if (dup2(outfile_fd, STDOUT_FILENO) == -1)
+            error("dup2 outfile -> stdout");
+        close(outfile_fd);
+        close(fd[1]);
+        close(fd[0]);
+        execute(argv[3], envp);
+        error127("child2");
+    }
+    return (pid);
 }
 
 void execute(const char *cmdline, char *const envp[])
@@ -85,14 +85,9 @@ void execute(const char *cmdline, char *const envp[])
     char **cmd;
     char *path;
 
-    cmd = ft_split(cmdline, ' ');
-    if (!cmd || !cmd[0])
+    cmd = parse_cmd(cmdline);
+    if (ft_strchr(cmd[0], '/')) 
     {
-        ft_putstr_fd("pipex: command not found\n", 2);
-        free_split(cmd);
-        error127("cmd split");
-    }
-    if (ft_strchr(cmd[0], '/')) {
         execve(cmd[0], cmd, envp);
         free_split(cmd);
         error127("execve");
@@ -108,4 +103,16 @@ void execute(const char *cmdline, char *const envp[])
     ft_putstr_fd("pipex: command not found\n", 2);
     free_split(cmd);
     error127("execve");
+}
+    
+static char **parse_cmd(const char *cmdline)
+{
+    char **cmd = ft_split(cmdline, ' ');
+    if (!cmd || !cmd[0])
+    {
+        ft_putstr_fd("pipex: command not found\n", 2);
+        free_split(cmd);
+        error127("cmd split");
+    }
+    return cmd;
 }

@@ -1,31 +1,35 @@
-NAME = pipex
-NAME_BNS = pipex_bonus
+NAME       = pipex
+NAME_BNS   = pipex_bonus
 
-CC = cc
-CFLAGS = -g -Wall -Wextra -Werror
+CC         = cc
+CFLAGS     = -g -Wall -Wextra -Werror
 
-HEADER = pipex.h
+LIBFT_DIR  = libft
+LIBFT_A    = $(LIBFT_DIR)/libft.a
 
-LIBFT_DIR = libft
-LIBFT_A = $(LIBFT_DIR)/libft.a
+HEADER     = pipex.h
 
-INCLUDES = -I. -I$(LIBFT_DIR)
-LIBS = -Llibft -lft
+INCLUDES   = -I. -I$(LIBFT_DIR)
+LIBS       = -L$(LIBFT_DIR) -lft
 
-SRCS = srcs/pipex.c srcs/utils.c
-OBJS = $(SRCS:.c=.o)
+SRCS       = srcs/main.c srcs/pipex.c srcs/utils.c
+OBJS       = $(SRCS:.c=.o)
 
-SRCS_BNS = srcs/pipex_bonus.c srcs/utils_bonus.c srcs/pipex.c srcs/utils.c
-OBJS_BNS = $(SRCS_BNS:.c=.o)
+SRCS_BNS   = srcs/main_bonus.c srcs/pipex_bonus.c srcs/utils_bonus.c srcs/pipex.c srcs/utils.c
+OBJS_BNS   = $(SRCS_BNS:.c=.o)
 
-all: $(NAME) 
+.PHONY: all bonus clean fclean re rebonus
 
-bonus: $(NAME)
-bonus: SRCS := SRCS_BNS
-bonus: OBJS := OBJS_BNS
+all: $(NAME)
+bonus: $(NAME_BNS)
 
-$(NAME): $(OBJS) $(LIBFT_A) $(HEADER)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(NAME) $(OBJS) $(LIBS)
+$(NAME): $(OBJS) $(LIBFT_A)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $(OBJS) $(LIBS)
+
+$(NAME_BNS): $(OBJS_BNS) $(LIBFT_A)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $(OBJS_BNS) $(LIBS)
+
+$(OBJS) $(OBJS_BNS): $(HEADER)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@ $(INCLUDES)
@@ -42,9 +46,4 @@ fclean: clean
 	rm -f $(NAME) $(NAME_BNS)
 
 re: fclean all
-	$(MAKE) all
-
 rebonus: fclean bonus
-	$(MAKE) bonus
-
-.PHONY: all bonus clean fclean re rebonus

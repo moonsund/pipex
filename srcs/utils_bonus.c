@@ -1,6 +1,6 @@
 #include "pipex.h"
 
-int usage(int argc, bool append_mode)
+int usage(int argc, char **argv)
 {
     if (argc < 5)
     {
@@ -8,7 +8,7 @@ int usage(int argc, bool append_mode)
                      "   or: ./pipex here_doc LIMITER cmd1 [cmd2 ... cmdN] outfile\n", 2);
         return (1);
     }
-    if (append_mode && argc < 6)
+    if (argv[1] && ft_strncmp(argv[1], "here_doc", 9) == 0 && argc < 6)
     {
         ft_putstr_fd("Usage: ./pipex here_doc LIMITER cmd1 cmd2 [cmd3 ... cmdN] outfile\n", 2);
         return (1);
