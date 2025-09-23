@@ -6,7 +6,7 @@
 /*   By: lorlov <lorlov@student.42berlin.de>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:33:10 by lorlov            #+#    #+#             */
-/*   Updated: 2025/09/23 11:45:02 by lorlov           ###   ########.fr       */
+/*   Updated: 2025/09/23 19:29:04 by lorlov           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 # include <errno.h>    // errno
 
 // pipex.c
-int pipex(char **argv, char *const envp[]);
+int run_pipeline(char **argv, char *const envp[]);
 void execute(const char *cmdline, char *const envp[]);
 
 // utils.c
@@ -38,6 +38,6 @@ void here_doc(const char *limiter);
 void child_process(const char *cmdline, char *const envp[]);
 
 // utils_bonus.c
-int usage(int argc, bool append_mode);
+int usage(int argc, char **argv);
 
 #endif

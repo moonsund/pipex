@@ -1,124 +1,118 @@
-void    child_process(char *cmdline, char **envp)
+#include "pipex.h"
+
+int main(int argc, char **argv, char *const envp[])
+{
+    int cmd_position;
+    int outfile_fd;
+    int infile_fd;
+    int devnull;
+        
+    if (usage(argc, argv))
+            return (1);    
+    if (ft_strncmp(argv[1], "here_doc", 9) == 0) // ./pipex here_doc LIMITER cmd1 cmd2 [cmd3 ... cmdN] outfile
+    {
+        cmd_position = 3;
+        outfile_fd = open(argv[argc - 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
+        if (outfile_fd < 0)
+            error("open outfile failure");
+        here_doc(argv[2]);
+    }
+    else // ./pipex infile cmd1 cmd2 [cmd3 ... cmdN] outfile
+    {
+        cmd_position = 2;
+        infile_fd = open(argv[1], O_RDONLY);
+        if (infile_fd < 0)
+        {
+            perror("open infile failure");
+            devnull = open("/dev/null", O_RDONLY);
+            if (devnull < 0)
+                error("open /dev/null");
+            if (dup2(devnull, STDIN_FILENO) == -1)
+                error("dup2 /dev/null -> stdin");
+            close(devnull);
+        }
+        else
+        {
+            if (dup2(infile_fd, STDIN_FILENO) == -1)
+                error("dup2 infile_fd -> stdin");
+            close(infile_fd);
+        }  
+        outfile_fd = open(argv[argc - 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (outfile_fd < 0)
+            error("open outfile failure");    
+    }
+    while(cmd_position < argc - 2)
+        child_process(argv[cmd_position++], envp);
+    if (dup2(outfile_fd, STDOUT_FILENO) == -1)
+        error("dup2 outfile_fd -> stdout");
+    close(outfile_fd);    
+    execute(argv[cmd_position], envp);
+    return (0);    
+}
+
+void here_doc(const char *limiter)
+{
+    int fd[2];
+    pid_t reader;
+    size_t l_len;
+    char *line;
+
+    if (pipe(fd) == -1)
+        error("here_doc pipe");
+
+    reader = fork();
+    if (reader < 0)
+        error("fork reader");
+        
+    if (reader == 0)
+    {
+        close(fd[0]);
+        l_len = ft_strlen(limiter);
+        line = get_next_line(STDIN_FILENO);
+        while (line)
+        {
+            if (ft_strncmp(line, limiter, l_len) == 0 &&
+                (line[l_len] == '\0' || line[l_len] == '\n'))
+                {
+                    free(line);
+                    close(fd[1]);
+                    exit(EXIT_SUCCESS);
+                }
+            write(fd[1], line, ft_strlen(line));
+            free(line);
+            line = get_next_line(STDIN_FILENO);
+        }
+    }
+    close(fd[1]);
+    if (dup2(fd[0], STDIN_FILENO) == -1)
+        error("here_doc dup2 fd[0] -> stdin");
+    close(fd[0]);
+    waitpid(reader, NULL, 0);
+}
+
+void child_process(const char *cmdline, char *const envp[])
 {
     pid_t pid;
     int   fd[2];
 
     if (pipe(fd) == -1)
-        error(); // желательно печатать perror и exit(EXIT_FAILURE)
-
+        error("pipe cmd");
     pid = fork();
-    if (pid == -1)
-        error();
-
-    if (pid == 0) {
-        // child: stdout -> pipe[1]
+    if (pid < 0)
+        error("fork cmd");
+    if (pid == 0)
+    {
+        close(fd[0]);
         if (dup2(fd[1], STDOUT_FILENO) == -1)
-            error();                 // в дочернем лучше exit(127)
-        close(fd[0]);
-        close(fd[1]);                // после dup2 копия не нужна
-        execute(cmdline, envp);      // внутри: execve(...) и при ошибке _exit(127)
-        _exit(127);                  // на всякий случай, если execute не завершила
-    } else {
-        // parent: stdin <- pipe[0] для следующей стадии
-        if (dup2(fd[0], STDIN_FILENO) == -1)
-            error();
+            error("dup2 fd[1] -> stdout");
         close(fd[1]);
-        close(fd[0]);
-        // ВАЖНО: не ждём здесь! Копите pids и ждите позже.
-        // waitpid(pid, NULL, 0);  // убрать отсюда
+        execute(cmdline, envp);
     }
+    close(fd[1]);
+    if (dup2(fd[0], STDIN_FILENO) == -1)
+        error("dup2 fd[0] -> stdin");
+    close(fd[0]);
 }
 
-void    here_doc(char *limiter, int argc)
-{
-    pid_t reader;
-    int   fd[2];
-    char *line;
 
-    if (argc < 6)
-        usage();
-    if (pipe(fd) == -1)
-        error();
 
-    reader = fork();
-    if (reader == -1)
-        error();
-
-    if (reader == 0) {
-        // writer: пишет в pipe до limiter
-        close(fd[0]);
-        while (get_next_line(&line)) 
-        {
-            // уберём \n в конце (если есть) для точного сравнения
-            size_t len = ft_strlen(line);
-            if (len && line[len - 1] == '\n')
-                line[len - 1] = '\0';
-            if (ft_strcmp(line, limiter) == 0) {
-                free(line);
-                _exit(EXIT_SUCCESS);
-            }
-            // вернём \n если нужно или пишем как есть из gnl-версии
-            write(fd[1], line, len);
-            write(fd[1], "\n", 1); // если вырезали \n выше
-            free(line);
-        }
-        _exit(EXIT_SUCCESS);
-    } else 
-    {
-        // parent: читает из pipe как stdin для первой команды
-        close(fd[1]);
-        if (dup2(fd[0], STDIN_FILENO) == -1)
-            error();
-        close(fd[0]);
-        // здесь подождать дочернего можно — это интерактивный ввод,
-        // буфер не переполнится, но тоже не обязательно.
-        waitpid(reader, NULL, 0);
-    }
-}
-
-int main(int argc, char **argv, char **envp)
-{
-    int   i;
-    int   filein;
-    int   fileout;
-
-    if (argc < 5)
-        usage(); // и exit(1) внутри
-
-    // Для ожидания всех промежуточных детей (если решите копить pids)
-    // pid_t pids[argc - 3]; int pcount = 0;
-
-    if (ft_strncmp(argv[1], "here_doc", 9) == 0) 
-    {
-        i = 3;
-        fileout = open_file(argv[argc - 1], 0); // O_APPEND внутри
-        here_doc(argv[2], argc);
-    } else 
-    {
-        i = 2;
-        fileout = open_file(argv[argc - 1], 1); // O_TRUNC внутри
-        filein  = open_file(argv[1], 2);        // O_RDONLY внутри
-        if (dup2(filein, STDIN_FILENO) == -1)
-            error();
-        close(filein);
-    }
-
-    // Запускаем все промежуточные команды без ожидания здесь
-    while (i < argc - 2) {
-        child_process(argv[i++], envp);
-        // pids[pcount++] = last_pid; // если решите возвращать pid из child_process
-    }
-
-    // Последняя команда пишет сразу в fileout
-    if (dup2(fileout, STDOUT_FILENO) == -1)
-        error();
-    close(fileout);
-
-    // Теперь можно при желании дождаться всех, если вы их копили
-    // for (int k = 0; k < pcount; ++k) waitpid(pids[k], NULL, 0);
-
-    execute(argv[argc - 2], envp);
-    // Если сюда дошли — exec не удался
-    error(); // в дочернем было бы _exit(127), в main — exit(EXIT_FAILURE)
-    return 1;
-}

@@ -8,7 +8,7 @@ int usage(int argc, char **argv)
                      "   or: ./pipex here_doc LIMITER cmd1 [cmd2 ... cmdN] outfile\n", 2);
         return (1);
     }
-    if (argv[1] && ft_strncmp(argv[1], "here_doc", 9) == 0 && argc < 6)
+    if (ft_strncmp(argv[1], "here_doc", 9) == 0 && argc < 6)
     {
         ft_putstr_fd("Usage: ./pipex here_doc LIMITER cmd1 cmd2 [cmd3 ... cmdN] outfile\n", 2);
         return (1);

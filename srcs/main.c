@@ -7,5 +7,5 @@ int main(int argc, char **argv, char *const envp[])
         ft_putstr_fd("Usage: ./pipex infile \"cmd1 args\" \"cmd2 args\" outfile\n", 2);
         return (1);
     }
-    return pipex(argv, envp);
+    return run_pipeline(argv, envp);
 }

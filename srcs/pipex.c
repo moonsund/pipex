@@ -5,7 +5,7 @@ static pid_t child_process2(char **argv, char *const envp[], int *fd);
 void execute(const char *cmdline, char *const envp[]);
 static char **parse_cmd(const char *cmdline);
 
-int pipex(char **argv, char *const envp[])
+int run_pipeline(char **argv, char *const envp[])
 {
     int fd[2];
     pid_t pid1;
