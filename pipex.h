@@ -6,7 +6,7 @@
 /*   By: lorlov <lorlov@student.42berlin.de>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:33:10 by lorlov            #+#    #+#             */
-/*   Updated: 2025/09/23 19:29:04 by lorlov           ###   ########.fr       */
+/*   Updated: 2025/09/24 11:48:31 by lorlov           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,12 +29,13 @@ void execute(const char *cmdline, char *const envp[]);
 
 // utils.c
 char    *find_path(char *cmd, char *const envp[]);
-void    error(const char *msg);
-void error127(const char *msg);
+void    sys_call_error(const char *msg);
+void cmd_exec_error(const char *msg);
 void    free_split(char **array);
 
-// pipiex_bous
-void here_doc(const char *limiter);
+// pipiex_bonus
+void run_append_mode(int argc, char **argv, int *cmd_position, int *outfile_fd);
+void run_trunc_mode(int argc, char **argv, int *cmd_position, int *infile_fd, int *outfile_fd);
 void child_process(const char *cmdline, char *const envp[]);
 
 // utils_bonus.c

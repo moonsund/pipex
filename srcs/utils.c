@@ -48,16 +48,24 @@ static char **parse_envp(char *const envp[])
     return (paths);
 }
 
-void error(const char *msg)
+void sys_call_error(const char *msg)
 {
     perror(msg);
     exit(EXIT_FAILURE);
 }
 
-void error127(const char *msg)
+void cmd_exec_error(const char *msg)
 {
+    int e;
+    
+    e = errno;
     perror(msg);
-    exit(127);
+    if (e == EACCES || e == ENOEXEC || e == EISDIR)
+        exit(126);
+    else if (e == ENOENT || e == ENOTDIR)
+        exit(127);
+    else
+        exit(1);
 }
 
 void free_split(char **array)

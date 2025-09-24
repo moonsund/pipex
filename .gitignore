@@ -4,6 +4,9 @@ fdf
 # Ignore object files
 *.o
 
+# Ignore libft library
+./libft
+
 # Ignore compiled static libraries
 libft/libft.a
 
@@ -24,3 +27,4 @@ libft/libft.a
 
 # Ignore tests files
 *test.c
+./tests
